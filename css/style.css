@@ -829,3 +829,35 @@ textarea {
 .nav-btn.active {
     color: #0d6efd;
 }
+
+/* Force clean desktop A4 layout during PDF capture on mobile devices */
+.invoice-paper.a4-format.pdf-export-mode {
+    width: 794px !important;
+    max-width: 794px !important;
+    min-height: auto !important;
+    padding: 36px 40px !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+}
+
+.pdf-export-mode .pdf-header {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+}
+
+.pdf-export-mode .pdf-inv-meta {
+    text-align: right !important;
+}
+
+.pdf-export-mode .pdf-footer-group {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+}
+
+.pdf-export-mode .pdf-bank-details {
+    max-width: 62% !important;
+}
