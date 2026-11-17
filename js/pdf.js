@@ -214,16 +214,75 @@ function closePreviewModal() {
 }
 
 function downloadInvoicePDF() {
-    const element = document.getElementById('invoice-render-area');
-    const invNumber = document.getElementById('invNumber')?.value || 'invoice';
+    const sourceElement = document.getElementById('invoice-render-area');
+    if (!sourceElement) {
+        alert('Please preview the invoice first.');
+        return;
+    }
+
+    const invNumber = document.getElementById('invNumber')?.value.trim() || 'invoice';
+    showToast('Generating single-page A4 PDF...');
+
+    // 1. Build an isolated A4 staging container at (0,0) with strict height control
+    const stagingWrapper = document.createElement('div');
+    stagingWrapper.id = 'pdf-export-staging';
+    stagingWrapper.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 794px;
+        background: #ffffff;
+        z-index: 99999;
+        pointer-events: none;
+    `;
+
+    const clone = sourceElement.cloneNode(true);
+    clone.classList.add('pdf-export-mode');
+    
+    // Force compact padding and spacing to guarantee it stays on 1 page
+    clone.style.padding = '25px 30px';
+    stagingWrapper.appendChild(clone);
+    document.body.appendChild(stagingWrapper);
 
     const opt = {
-        margin:       0.2,
+        margin:       [5, 5, 5, 5], // 5mm tiny margins all around to prevent page spill
         filename:     `${invNumber}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: 794
+        },
+        jsPDF:        { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait' 
+        },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
+
+    const savedScrollY = window.scrollY;
+    window.scrollTo(0, 0);
+
+    html2pdf()
+        .set(opt)
+        .from(clone)
+        .save()
+        .then(() => {
+            stagingWrapper.remove();
+            window.scrollTo(0, savedScrollY);
+            showToast('Single-page A4 PDF downloaded!');
+        })
+        .catch((err) => {
+            console.error('PDF export failed:', err);
+            stagingWrapper.remove();
+            window.scrollTo(0, savedScrollY);
+            alert('Error generating PDF.');
+        });
+}
+
 
     showToast('Generating A4 PDF...');
     html2pdf().set(opt).from(element).save().then(() => {
